@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  # === База данных ===
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pass}
+      POSTGRES_DB: ${POSTGRES_DB:-desserts_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # === Твой бэкенд ===
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-pass}@postgres:5432/${POSTGRES_DB:-desserts_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    networks:
+      - app-network
+
+  # === Твой MCP-сервер ===
+  mcp-desserts:
+    build: ./mcp/mcp-desserts
+    environment:
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
+    stdin_open: true
+    tty: true
+    networks:
+      - app-network
+
+  # === Nanobot (агент) ===
+  nanobot:
+    build: ./nanobot
+    env_file:
+      - .env.docker.secret
+    environment:
+      - NANOBOT_ACCESS_KEY=demo123
+      - LLM_API_KEY=i6SV7fi89JcJgHlclfuv7rIRQXFCVrt3
+      - LLM_API_BASE_URL=https://api.mistral.ai/v1
+      - LLM_API_MODEL=mistral-small-latest
+      - NANOBOT_GATEWAY_CONTAINER_ADDRESS=0.0.0.0
+      - NANOBOT_GATEWAY_CONTAINER_PORT=18790
+      - NANOBOT_LMS_BACKEND_URL=http://backend:8000
+      - NANOBOT_LMS_API_KEY=mariachizhikova08
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_PYTHON_LOG_CORRELATION=true
+    depends_on:
+      - backend
+      - mcp-desserts
+    networks:
+      - app-network
+
+  # === Qwen Code API прокси ===
+  qwen-code-api:
+    build: ./qwen-code-api
+    ports:
+      - "42005:8080"
+    environment:
+      - QWEN_CODE_API_KEY=${QWEN_CODE_API_KEY}
+      - PORT=8080
+      - ADDRESS=0.0.0.0
+      - DEFAULT_MODEL=qwen3-coder-plus
+      - LOG_LEVEL=error
+      - MAX_RETRIES=5
+      - RETRY_DELAY_MS=1000
+      - QWEN_CODE_AUTH_USE=true
+      - LOG_REQUESTS=true
+    volumes:
+      - ~/.qwen:/mnt/qwen-creds:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # === Flutter Web клиент ===
+  flutter-web:
+    build:
+      context: ./client
+      dockerfile: docker/Dockerfile
+    ports:
+      - "42002:80"
+    depends_on:
+      - backend
+      - nanobot
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

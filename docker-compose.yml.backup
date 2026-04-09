@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pass}
+      POSTGRES_DB: ${POSTGRES_DB:-desserts_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-pass}@postgres:5432/${POSTGRES_DB:-desserts_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    networks:
+      - app-network
+
+  mcp-desserts:
+    build: ./mcp/mcp-desserts
+    environment:
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
+    volumes:
+      - ./mcp/mcp-desserts:/app
+    networks:
+      - app-network
+
+  nanobot:
+    build: ./nanobot
+    environment:
+      - NANOBOT_ACCESS_KEY=${NANOBOT_ACCESS_KEY}
+      - LLM_API_KEY=${QWEN_CODE_API_KEY}
+      - LLM_API_BASE_URL=http://qwen-code-api:8080/v1
+    depends_on:
+      - backend
+      - mcp-desserts
+    volumes:
+      - ./nanobot:/app/nanobot
+      - ./mcp/mcp-desserts:/app/mcp/mcp-desserts
+    networks:
+      - app-network
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "42002:42002"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - nanobot
+      - backend
+    networks:
+      - app-network
+
+  client-web-flutter:
+    image: ghcr.io/inno-se-toolkit/client-web-flutter:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - nanobot
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

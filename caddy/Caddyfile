@@ -1,0 +1,21 @@
+:42002
+
+# API бэкенда
+handle /api/* {
+    reverse_proxy backend:8000
+}
+
+# Документация API
+handle /docs {
+    reverse_proxy backend:8000
+}
+
+# WebSocket для чата (если подключишь клиент позже)
+handle /ws/chat {
+    reverse_proxy nanobot:18790
+}
+
+# Health check
+handle /health {
+    respond "OK" 200
+}

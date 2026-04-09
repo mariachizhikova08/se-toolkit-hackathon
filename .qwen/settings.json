@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose ps)",
+      "Bash(docker compose logs *)",
+      "Bash(powershell *)",
+      "Bash(docker compose build *)",
+      "Bash(docker *)",
+      "Bash(timeout *)",
+      "Bash(ls *)",
+      "Bash(type *)",
+      "Bash(findstr *)",
+      "Bash(move *)",
+      "Bash(rd *)",
+      "Bash(dir *)",
+      "Bash(curl *)",
+      "Bash(python *)",
+      "Bash(flutter *)",
+      "Bash(mkdir *)",
+      "Bash(else)",
+      "Bash(f *)",
+      "Bash(echo *)"
+    ]
+  },
+  "$version": 3
+}

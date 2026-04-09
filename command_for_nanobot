@@ -1,0 +1,3 @@
+cd c:\Users\maria\hackathon-desserts
+docker compose ps
+docker compose logs nanobot --tail 20

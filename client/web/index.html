@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍰 Katrin's Cakes — Каталог десертов</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FFB6C1">
+  <meta name="description" content="Интерактивный каталог десертов с ИИ-кондитером">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #FFF5F5;
+      font-family: 'Poppins', sans-serif;
+    }
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      gap: 16px;
+      background: linear-gradient(135deg, #FFB6C1, #FFF5F5);
+    }
+    .loading-emoji {
+      font-size: 72px;
+      animation: bounce 1.2s infinite;
+    }
+    .loading-text {
+      font-size: 20px;
+      color: #8B4513;
+      font-weight: 600;
+      font-family: 'Playfair Display', serif;
+    }
+    .loading-sub {
+      font-size: 14px;
+      color: #D4A5A5;
+      font-family: 'Poppins', sans-serif;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .loading {
+      animation: fadeIn 0.6s ease-out;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&family=Great+Vibes&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="loading" id="loading">
+    <div class="loading-emoji">🍰</div>
+    <div class="loading-text">Katrin's Cakes</div>
+    <div class="loading-sub">Загружаем десерты...</div>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('loading');
+      el.style.transition = 'opacity 0.4s';
+      el.style.opacity = '0';
+      setTimeout(function() { el.remove(); }, 400);
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

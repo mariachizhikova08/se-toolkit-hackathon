@@ -1,0 +1,17 @@
+[project]
+name = "mcp-desserts"
+version = "0.1.0"
+dependencies = [
+    "mcp[cli]",
+    "httpx",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+mcp-desserts = "mcp_desserts.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_desserts"]
