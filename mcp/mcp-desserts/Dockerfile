@@ -3,8 +3,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Устанавливаем uv с официального PyPI (зеркало ломает хеш)
-RUN pip install --no-cache-dir --index-url https://pypi.org/simple/ uv
+# Устанавливаем uv официальным установщиком
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
+ENV PATH="/root/.local/bin:/root/.cargo/bin:${PATH}"
 
 # Копируем зависимости
 COPY pyproject.toml ./
