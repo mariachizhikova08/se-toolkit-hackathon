@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # === База данных ===
   postgres:
@@ -70,31 +68,6 @@ services:
       - mcp-desserts
     networks:
       - app-network
-
-  # === Qwen Code API прокси ===
-  qwen-code-api:
-    build: ./qwen-code-api
-    ports:
-      - "42005:8080"
-    environment:
-      - QWEN_CODE_API_KEY=${QWEN_CODE_API_KEY}
-      - PORT=8080
-      - ADDRESS=0.0.0.0
-      - DEFAULT_MODEL=qwen3-coder-plus
-      - LOG_LEVEL=error
-      - MAX_RETRIES=5
-      - RETRY_DELAY_MS=1000
-      - QWEN_CODE_AUTH_USE=true
-      - LOG_REQUESTS=true
-    volumes:
-      - ~/.qwen:/mnt/qwen-creds:ro
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   # === Flutter Web клиент ===
   flutter-web:
